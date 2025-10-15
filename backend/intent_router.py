@@ -1,7 +1,5 @@
-from openai import OpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 import os
-
-client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
 INTENT_PROMPT = """
 You are an AI intent classifier for a hybrid chatbot.
@@ -26,17 +24,14 @@ Label: GENERAL
 Now classify:
 User: {query}
 Label:
-
 """
+
 def detect_intent(query: str) -> str:
     prompt = INTENT_PROMPT.format(query=query)
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0,
-        max_tokens=10,
-    )
-    label = response.choices[0].message.content.strip().upper()
+    model = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=os.getenv("GOOGLE_API_KEY"))
+    response = model.invoke(prompt)
+    label = response.content.strip().upper()
+
     if "NEC" in label:
         return "nec"
     elif "WATTMONK" in label:

@@ -1,0 +1,28 @@
+## `requirements.txt`
+
+
+# Core
+python-dotenv
+flask
+streamlit
+requests
+
+# LangChain + Google
+langchain
+langchain-google-genai
+langchain-community
+langchain-unstructured
+
+# Vector Store
+chromadb
+
+# NLP preprocessing
+nltk
+
+# PDF / DOCX loaders
+unstructured
+pdfplumber
+python-docx
+
+# Optional debugging
+tqdm

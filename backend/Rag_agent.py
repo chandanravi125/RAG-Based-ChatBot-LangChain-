@@ -1,50 +1,23 @@
-
-""" 
-This script sets up a Retrieval-Augmented Generator (RAG) agent using LangChain.
-It loads pre-existing vector stores, creates retrievers, and initializes a ChatOpenAI model.
-"""
-
 import os
 from dotenv import load_dotenv
-from langchain_openai import OpenAIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain_community.vectorstores import Chroma
-from langchain.chains import ConversationalRetrievalChain
-from langchain.chat_models import ChatOpenAI
-from langchain.memory import ConversationBufferMemory
 from intent_router import detect_intent
 
-# Load environment variables from .env file
+# Load env vars
 load_dotenv()
 
 class RAGAgent:
-    """ 
-    A Retrieval-Augmented Generator (RAG) agent.
-    """
+    """ Retrieval-Augmented Generator (RAG) agent using Gemini. """
     def __init__(self, nec_index, watt_index, llm):
-        """ 
-        Initializes the RAG agent.
-
-        Args:
-            nec_index: The NEC index.
-            watt_index: The Wattmonk index.
-            llm: The language model.
-        """
         self.nec_index = nec_index
         self.watt_index = watt_index
         self.llm = llm
 
     def answer(self, query):
-        """ 
-        Answers a query based on the intent.
-
-        Args:
-            query: The query to answer.
-
-        Returns:
-            The response to the query.
-        """
+        """ Answers a query based on intent and vector context. """
         intent = detect_intent(query)
-        print(f" Intent: {intent}")
+        print(f"Intent: {intent}")
 
         if intent == "nec":
             docs = self.nec_index.similarity_search(query, k=3)
@@ -55,43 +28,25 @@ class RAGAgent:
 
         context = "\n\n".join([d.page_content for d in docs])
         final_prompt = f"Answer the user query based on the following context (if any):\n{context}\n\nQuery: {query}"
-        resp = self.llm(final_prompt)
-        return resp
+        response = self.llm.invoke(final_prompt)
+        return response.content
 
-def create_rag_agent(open_API_key):
-    """ 
-    Creates a RAG agent.
+def create_rag_agent():
+    """ Creates and configures the Gemini-based RAG Agent. """
+    google_key = os.getenv("GOOGLE_API_KEY")
+    if not google_key:
+        raise ValueError("GOOGLE_API_KEY not found in environment variables")
 
-    Args:
-        open_API_key: The OpenAI API key.
+    emb = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001", google_api_key=google_key)
 
-    Returns:
-        A RAGAgent instance.
-    """
-    emb = OpenAIEmbeddings(api_key=open_API_key)
-    vector_Store_nec = Chroma.load_local("chroma_nec_index", emb)
-    vector_Store_watt = Chroma.load_local("chroma_wattmonk_index", emb)
-    llm = ChatOpenAI(openai_api_key=open_API_key, temperature=0.0, model="gpt-4o")
-    return RAGAgent(vector_Store_nec, vector_Store_watt, llm)
+    vector_nec = Chroma(persist_directory="chroma_indexes/chroma_nec_index", embedding_function=emb)
+    vector_watt = Chroma(persist_directory="chroma_indexes/chroma_wattmonk_index", embedding_function=emb)
 
-def main():
-    try:
-        # Set OpenAI API key
-        open_API_key = os.getenv("OPENAI_API_KEY")
-        if not open_API_key:
-            raise ValueError("OPENAI_API_KEY not found in environment variables")
+    llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=google_key, temperature=0.2)
 
-        rag_agent = create_rag_agent(open_API_key)
-
-        # Test the RAG agent
-        query = "What are the NEC guidelines for electrical safety?"
-        response = rag_agent.answer(query)
-        print(response)
-
-    except ValueError as ve:
-        print(f"ValueError: {ve}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
+    return RAGAgent(vector_nec, vector_watt, llm)
 
 if __name__ == "__main__":
-    main()
+    agent = create_rag_agent()
+    query = "What are NEC guidelines for electrical safety?"
+    print(agent.answer(query))
