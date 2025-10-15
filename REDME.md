@@ -1,4 +1,4 @@
-#  Gemini RAG Chatbot — NEC & Wattmonk Assistant
+# Gemini RAG Chatbot — NEC & Wattmonk Assistant
 
 This project is a **Retrieval-Augmented Generation (RAG)** chatbot built using **LangChain** and **Gemini (Google Generative AI)**.  
 It can answer queries related to **NEC (National Electrical Code)** and **Wattmonk company documents**, with intelligent intent classification and contextual retrieval.
@@ -28,7 +28,7 @@ project/
 │ ├── chroma_nec_index/
 │ └── chroma_wattmonk_index/
 │
-├── document_loader.py # Builds Chroma indexes from documents
+├── document_loader.py # Preprocess texts and builds Chroma indexes from documents
 ├── Rag_agent.py # RAG logic + Gemini LLM integration
 ├── intent_router.py # Intent detection (NEC/Wattmonk/General)
 ├── main.py # Flask API backend (/ask)
@@ -68,7 +68,7 @@ python -m venv venv
 
 venv\Scripts\activate       
 
-3️⃣ Install Dependencies
+3️⃣ Create requirements.txt and  Install Dependencies
 
 pip install -r requirements.txt
 
@@ -110,12 +110,12 @@ Response:
 # Tech Stack
 Component	Technology
 Embeddings	Gemini Embeddings (models/gemini-embedding-001)
-LLM	Gemini 1.5 Pro
+LLM	      Gemini 1.5 Pro
 Framework	LangChain
-Database	Chroma Vector Store
-Backend	Flask
-Frontend	Streamlit
-Language	Python 3.10+
+Database	   Chroma Vector Store
+Backend	   Flask
+Frontend	   Streamlit
+Language	   Python 3.10+
 
 # Optional: Rebuild Index Automatically
 If your document sources are updated, simply rerun:
